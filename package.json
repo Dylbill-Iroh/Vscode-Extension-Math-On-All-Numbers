@@ -1,0 +1,60 @@
+{
+  "name": "math-on-all-numbers",
+  "displayName": "Math On All Numbers",
+  "description": "Apply math operations to all numbers in selection, or entire document.",
+  "version": "0.0.1",
+  "publisher": "Dylbill",
+  "license": "MIT",
+  "icon": "images/icon.png",
+	"keywords": [
+		"Math",
+		"Number",
+    "Add",
+    "Subtract",
+    "Multiply",
+    "Divide",
+    "Modulo",
+    "Exponent",
+    "Selection"
+	],
+  "engines": {
+    "vscode": "^1.82.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "activationEvents": [],
+  "main": "./out/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "math-on-all-numbers.mathOnAllNumbers",
+        "title": "Math On All Numbers"
+      },
+      {
+        "command": "math-on-all-numbers.performLastOperation",
+        "title": "Math On All Numbers - Perform Last Operation"
+      }
+    ]
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "pretest": "npm run compile && npm run lint",
+    "lint": "eslint src --ext ts",
+    "test": "node ./out/test/runTest.js"
+  },
+  "devDependencies": {
+    "@types/vscode": "^1.82.0",
+    "@types/mocha": "^10.0.1",
+    "@types/node": "16.x",
+    "@typescript-eslint/eslint-plugin": "^6.4.1",
+    "@typescript-eslint/parser": "^6.4.1",
+    "eslint": "^8.47.0",
+    "glob": "^10.3.3",
+    "mocha": "^10.2.0",
+    "typescript": "^5.1.6",
+    "@vscode/test-electron": "^2.3.4"
+  }
+}
