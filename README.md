@@ -14,6 +14,8 @@ Apply math operations to all numbers in current selection, or entire document. C
 - Add 1 to numbers in selection
   ![](https://github.com/Dylbill-Iroh/Vscode-Extension-Math-On-All-Numbers/blob/main/images/Vscode%20Math%20On%20All%20Numbers%20-%20Add.gif)
 
+- Multiply all numbers by 2 in document.
+   ![]https://github.com/Dylbill-Iroh/Vscode-Extension-Math-On-All-Numbers/blob/main/images/Vscode%20Math%20On%20All%20Numbers%20-%20Multiply%20All.gif
 ## Ways to support me
 - [Buy me a Coffee](https://ko-fi.com/dylbill)
 - [Become a Patron](https://www.patreon.com/Dylbill)
