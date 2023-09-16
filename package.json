@@ -2,9 +2,13 @@
   "name": "math-on-all-numbers",
   "displayName": "Math On All Numbers",
   "description": "Apply math operations to all numbers in selection, or entire document.",
-  "version": "0.0.1",
+  "version": "0.0.3",
   "publisher": "Dylbill",
   "license": "MIT",
+  "repository": {
+		"type": "git",
+		"url": "https://github.com/Dylbill-Iroh/Vscode-Extension-Math-On-All-Numbers"
+	},
   "icon": "images/icon.png",
 	"keywords": [
 		"Math",

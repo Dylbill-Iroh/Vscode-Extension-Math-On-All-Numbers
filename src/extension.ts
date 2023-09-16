@@ -34,7 +34,6 @@ export function newSelectionMathOperationFromuser() {
 
 		}).then(operation => {
 			if (operation){
-				lastOperation = operation;
 				selectionMath(operation, true);
 			} 
 		});
@@ -47,35 +46,38 @@ export function selectionMath(operation:string, bLastOperation:boolean) {
 	if (editor) {
 		if (operation !== ""){
 			let mathOperator = operation.charAt(0);
-			lastOperation = operation;
-			//outputChannel.appendLine("selection math " + operation + " " + mathOperator);
-			//outputChannel.show();
 			let value = operation.substring(1);
-			let decimals = getNumberofDecimalPlacesInNumberString(value);
-			switch(mathOperator){
-				case '+':
-					doMathSelection(function(a:number, b:number) { return (a + b); }, Number(value), decimals);
-					break;
-				case '-':
-					doMathSelection(function(a:number, b:number) { return (a - b); }, Number(value), decimals);
-					break;
-				case '*':
-					doMathSelection(function(a:number, b:number) { return (a * b); }, Number(value), decimals);
-					break;
-				case '/':
-					doMathSelection(function(a:number, b:number) { return (a / b); }, Number(value), decimals);
-					break;
-				case '%':
-					doMathSelection(function(a:number, b:number) { return (a % b); }, Number(value), decimals);
-					break;
-				case '^':
-					doMathSelection(function(a:number, b:number) { return (a ** b); }, Number(value), decimals);
-					break;
-				default:
-					outputChannel.appendLine("operator " + mathOperator + " not recognized");
-					outputChannel.show();
+			if (value !== ""){
+				let success = true;
+				let decimals = getNumberofDecimalPlacesInNumberString(value);
+				switch(mathOperator){
+					case '+':
+						doMathSelection(function(a:number, b:number) { return (a + b); }, Number(value), decimals);
+						break;
+					case '-':
+						doMathSelection(function(a:number, b:number) { return (a - b); }, Number(value), decimals);
+						break;
+					case '*':
+						doMathSelection(function(a:number, b:number) { return (a * b); }, Number(value), decimals);
+						break;
+					case '/':
+						doMathSelection(function(a:number, b:number) { return (a / b); }, Number(value), decimals);
+						break;
+					case '%':
+						doMathSelection(function(a:number, b:number) { return (a % b); }, Number(value), decimals);
+						break;
+					case '^':
+						doMathSelection(function(a:number, b:number) { return (a ** b); }, Number(value), decimals);
+						break;
+					default:
+						success = false;
+						outputChannel.appendLine("operator " + mathOperator + " not recognized");
+						outputChannel.show();
+				}
+				if (success === true) {
+					lastOperation = operation;
+				}
 			}
-
 		} else if (bLastOperation){
 			outputChannel.appendLine("No selection math operations have been performed in this session yet.");
 			outputChannel.show();
@@ -93,67 +95,113 @@ export function doMathSelection(expression:Function, value:number, valueDecimals
 	const editor = vscode.window.activeTextEditor;
 	if (editor){
 		const document = editor.document;
-		const selection = editor.selection; 
-		// Get the word within the selection
-		let selectedText = document.getText(selection); 
-		let entireDocument = false;
+		const selections = editor.selections; 
+		let selectionNumbers: string[] = [];
+		//outputChannel.appendLine("selections length = " + selections.length);
+		//outputChannel.show();
 
-		if (selectedText === "" || selectedText === undefined){
-			selectedText = document.getText();
-			entireDocument = true;
+		if (selections.length > 1){
+			for (let i = 0; i < selections.length; i++){
+				const selection = selections[i];
+				let newSelectionNumbers = getNewNumbersForSelection(expression, value, valueDecimals, editor, selection, document, false);
+				if (newSelectionNumbers === undefined){
+					newSelectionNumbers = "";
+				}
+				selectionNumbers.push(newSelectionNumbers);
+			}
+			editor.edit(builder => {
+				for(let i = 0; i < selectionNumbers.length; i++){
+					builder.replace(selections[i], selectionNumbers[i]);
+				}
+			});
+		} else {
+			const selection = editor.selection; 
+			let newSelectionNumbers = getNewNumbersForSelection(expression, value, valueDecimals, editor, selection, document, true);
+			let replaceString = "";
+			if (newSelectionNumbers !== undefined){
+				replaceString = newSelectionNumbers;
+			}
+			if (replaceString !== ""){
+				if (selection && !selection.isEmpty){
+					editor.edit(builder => {
+						builder.replace(selection, replaceString);
+					});
+				} else {
+					editor.edit(builder => {
+						builder.replace(new vscode.Range(document.lineAt(0).range.start, document.lineAt(document.lineCount - 1).range.end), replaceString);
+					});
+				}
+			}
 		}
-		
-		let lines = selectedText.split("\n");
-		for (let i = 0; i < lines.length; i++){
-			let iStart = getNextIndexOfNumberInString(lines[i]); 
-			let iEnd = getNextIndexOfNonNumberInString(lines[i], iStart); 
-			while (iStart !== -1){
-				if (iEnd === -1){
-					iEnd = lines[i].length;
-				} 
+	}
+}
 
-				if (lines[i].charAt(iEnd) === "."){
-					let nextiEnd = iEnd + 1; 
-					if (nextiEnd < lines[i].length){
-						if (isCharNumber(lines[i].charAt(nextiEnd))){
-							iEnd = getNextIndexOfNonNumberInString(lines[i], nextiEnd); 
-							if (iEnd === -1){
-								iEnd = lines[i].length;
-							}
+export function getNewNumbersForSelection(expression:Function, value:number, valueDecimals:number, editor:vscode.TextEditor, selection:vscode.Selection, document:vscode.TextDocument, allowEntireDocument:boolean){
+	let selectedText = ""; 
+	let entireDocument = false;
+
+	if (selection && !selection.isEmpty) {
+		selectedText = document.getText(selection);
+	} else if(allowEntireDocument){
+		selectedText = document.getText();
+		entireDocument = true;
+	}
+	
+	if (selectedText === ""){
+		return;
+	}
+	// outputChannel.appendLine(selectedText);
+	// outputChannel.show();
+
+	let lines = selectedText.split("\n");
+	for (let i = 0; i < lines.length; i++){
+		let iStart = getNextIndexOfNumberInString(lines[i]); 
+		let iEnd = getNextIndexOfNonNumberInString(lines[i], iStart); 
+		while (iStart !== -1){
+			if (iEnd === -1){
+				iEnd = lines[i].length;
+			} 
+
+			if (lines[i].charAt(iEnd) === "."){
+				let nextiEnd = iEnd + 1; 
+				if (nextiEnd < lines[i].length){
+					if (isCharNumber(lines[i].charAt(nextiEnd))){
+						iEnd = getNextIndexOfNonNumberInString(lines[i], nextiEnd); 
+						if (iEnd === -1){
+							iEnd = lines[i].length;
 						}
 					}
 				}
-
-				let sNumber = lines[i].substring(iStart, iEnd); 
-				let numberOfDecimals = getNumberofDecimalPlacesInNumberString(sNumber);
-
-				if (valueDecimals > numberOfDecimals){
-					numberOfDecimals = valueDecimals;
-				}
-
-				let iNumber = Number(sNumber);
-				iNumber = expression(iNumber, value);
-				let siNumber = iNumber.toFixed(numberOfDecimals);
-
-				let sStart = lines[i].substring(0, iStart); 
-				lines[i] = sStart + siNumber + lines[i].substring(iEnd); 
-				iStart = getNextIndexOfNumberInString(lines[i], (iStart + siNumber.length)); 
-				iEnd = getNextIndexOfNonNumberInString(lines[i], iStart);
 			}
-		}
-		
-		selectedText = lines.join("");
 
-		if (entireDocument){
-			editor.edit(builder => {
-				builder.replace(new vscode.Range(document.lineAt(0).range.start, document.lineAt(document.lineCount - 1).range.end), selectedText);
-			});
-		} else {
-			editor.edit(editBuilder => {
-				editBuilder.replace(selection, selectedText);
-			});
+			let sNumber = lines[i].substring(iStart, iEnd); 
+			let numberOfDecimals = getNumberofDecimalPlacesInNumberString(sNumber);
+
+			if (valueDecimals > numberOfDecimals){
+				numberOfDecimals = valueDecimals;
+			}
+
+			let iNumber = Number(sNumber);
+			iNumber = expression(iNumber, value);
+			let siNumber = iNumber.toFixed(numberOfDecimals);
+
+			let sStart = lines[i].substring(0, iStart); 
+			lines[i] = sStart + siNumber + lines[i].substring(iEnd); 
+			iStart = getNextIndexOfNumberInString(lines[i], (iStart + siNumber.length)); 
+			iEnd = getNextIndexOfNonNumberInString(lines[i], iStart);
 		}
 	}
+	
+	selectedText = lines.join("\n");
+
+	outputChannel.appendLine(selectedText);
+	outputChannel.show();
+
+	return selectedText;
+}
+
+export function getNewNumbersInSelections(){
+	const selectionNumbers: string[] = [];
 }
 
 export function getNumberofDecimalPlacesInNumberString(s:string){
