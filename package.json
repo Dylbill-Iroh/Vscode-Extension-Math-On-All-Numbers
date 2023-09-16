@@ -2,7 +2,7 @@
   "name": "math-on-all-numbers",
   "displayName": "Math On All Numbers",
   "description": "Apply math operations to all numbers in selection, or entire document.",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "publisher": "Dylbill",
   "license": "MIT",
   "repository": {

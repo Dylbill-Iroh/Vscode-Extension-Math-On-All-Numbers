@@ -194,8 +194,8 @@ export function getNewNumbersForSelection(expression:Function, value:number, val
 	
 	selectedText = lines.join("\n");
 
-	outputChannel.appendLine(selectedText);
-	outputChannel.show();
+	//outputChannel.appendLine(selectedText);
+	//outputChannel.show();
 
 	return selectedText;
 }
